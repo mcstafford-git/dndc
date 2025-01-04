@@ -1,0 +1,20 @@
+{
+  "build": {
+    "args": {
+      "DOTFILES": "https://github.com/mcstafford-git/oci-dots.git",
+      "HISTORY_MOUNT": "/sandbox/.local/state/bash_history",
+      "IMAGE_NAME": "docker.io/ubuntu",
+      "IMAGE_TAG": "oracular",
+      "OS_USER": "sandbox",
+      "WORKDIR": "/sandbox"
+    },
+    "dockerfile": "./devcontainer.dockerfile"
+  },
+  "features": {},
+  "image": "localhost/devcontainers/oci-dots",
+  "mounts": [
+    "source=devcontainer-bash-history--oci-dots,target=/sandbox/.local/state/bash_history"
+  ],
+  "postCreateCommand": "",
+  "remoteUser": "sandbox"
+}
