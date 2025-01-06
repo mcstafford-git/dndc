@@ -4,7 +4,7 @@ ARG IMAGE_TAG
 FROM ${IMAGE_NAME}:${IMAGE_TAG} AS base
 
 FROM base AS os_tweaks
-SHELL ["/usr/bin/bash", "-o", "nounset", "-o", "errexit", "-o", "pipefail", "-o", "xtrace", "-c"]
+SHELL ["/bin/sh", "-c"]
 ARG \
     OS_GID='10000' \
     OS_UID='10000' \
@@ -16,52 +16,49 @@ ENV \
     OS_USER="${OS_USER:?}" \
     WORKDIR="${WORKDIR}"
 RUN <<##END-RUN
+set -xeu
 if ! getent passwd "${OS_USER}"; then
-    groupadd --gid "${OS_GID}" "${OS_USER}"
-    useradd --create-home \
-      --home-dir "${WORKDIR}" \
-      --uid "${OS_UID}" \
-      --gid "${OS_GID}" \
-      "${OS_USER}"
+    addgroup -g "${OS_GID}" "${OS_USER}"
+    adduser -D \
+        -G "${OS_USER}" \
+        -h "${WORKDIR}" \
+        -u "${OS_UID}" \
+        "${OS_USER}"
+    printf '%s:%sn' \
+        "${OS_USER}" \
+        "$(printf '%s\n' $(< /dev/urandom tr -dc 'A-Za-z0-9' | head -c 32))" |
+        chpasswd
 fi
-packages=(
-  ca-certificates
-  curl
-  git
-  gnupg
-  kmod
-  locales
-  netcat-openbsd
-  netbase
-  tzdata
-  vim-nox
-  wget
+packages=$(
+    echo '
+        bash
+        busybox-extras
+        coreutils
+        musl
+        musl-locales
+        musl-locales-lang
+        util-linux
+        vim
+    ' |
+        tr '\n' ' ' |
+        xargs
 )
-apt-get update
-apt-get install --no-install-recommends --yes "${packages[@]}"
-locale-gen en_US.UTF-8
-update-locale LANG=en_US.UTF-8
+apk add ${packages}
 ##END-RUN
 WORKDIR "${WORKDIR}"
 USER "${OS_USER}"
 
 # configure persistent history
 FROM os_tweaks AS persistent_history
-SHELL ["/usr/bin/bash", "-o", "nounset", "-o", "errexit", "-o", "pipefail", "-o", "xtrace", "-c"]
+SHELL ["/bin/bash", "-o", "nounset", "-o", "errexit", "-o", "pipefail", "-o", "xtrace", "-c"]
 ARG HISTORY_MOUNT
 ENV HISTORY_MOUNT="${HISTORY_MOUNT}"
 RUN <<##END-RUN
-whoami
 pwd
-install -d --mode=0700 "${HISTORY_MOUNT}"
 volume_file="${HISTORY_MOUNT}/.bash_history"
-install --mode=0600 /dev/null "${volume_file}"
+install -Dm 0600 /dev/null "${volume_file}"
 if ! test -e ~/.bashrc; then
-  install \
-      owner="${OS_USER}" \
-      group="${OS_USER}" \
-      mode=0600 \
-      /dev/null ~/.bashrc
+  install -m=0600 /dev/null ~/.bashrc
 fi
 lines=(
     ''
@@ -93,7 +90,10 @@ fi
 ##END-RUN
 
 FROM persistent_history AS apply_dotfiles
-ENV SHELL='/usr/bin/bash'
+ENV \
+    LANG='en_US.UTF-8' \
+    LANGUAGE='en_US:en' \
+    SHELL='/bin/bash'
 RUN --mount=from=dotfiles,source=/tmp/dotfiles.tgz,target=/tmp/dotfiles.tgz,type=bind,readonly <<##END-RUN
 if test -s /tmp/dotfiles.tgz; then
     tmp=$(mktemp -d)

@@ -1,20 +1,20 @@
 {
   "build": {
     "args": {
-      "DOTFILES": "https://github.com/mcstafford-git/oci-dots.git",
-      "HISTORY_MOUNT": "/sandbox/.local/state/bash_history",
-      "IMAGE_NAME": "docker.io/ubuntu",
-      "IMAGE_TAG": "oracular",
-      "OS_USER": "sandbox",
-      "WORKDIR": "/sandbox"
+      "DOTFILES": "https://github.com/mcstafford-git/dndc.git",
+      "HISTORY_MOUNT": "/workspaces/.local/state/bash_history",
+      "IMAGE_NAME": "docker.io/alpine",
+      "IMAGE_TAG": "latest",
+      "OS_USER": "worker",
+      "WORKDIR": "/workspaces"
     },
     "dockerfile": "./devcontainer.dockerfile"
   },
   "features": {},
-  "image": "localhost/devcontainers/oci-dots",
+  "image": "localhost/devcontainers/dndc",
   "mounts": [
-    "source=devcontainer-bash-history--oci-dots,target=/sandbox/.local/state/bash_history"
+    "source=devcontainer-bash-history-volume--dndc,target=/workspaces/.local/state/bash_history"
   ],
   "postCreateCommand": "",
-  "remoteUser": "sandbox"
+  "remoteUser": "worker"
 }

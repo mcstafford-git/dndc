@@ -7,5 +7,6 @@ test -d ~/.config ||
 
 cp --recursive ./.config/* ~/.config/
 
-find ~/.config/dotfiles -type f ! -name .inputrc -printf '. %p\n' |
+find ~/.config/dotfiles -type f ! -name .inputrc -exec echo '. {}' ';' |
     tee -a ~/.bashrc
+
