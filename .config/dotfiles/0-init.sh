@@ -6,3 +6,17 @@ read -r os_release < <(
 printf 'This sandbox container(%s) is running %s.\n' \
     "${HOSTNAME}" \
     "${os_release}"
+readarray -t workspaces < <(
+  find /workspaces \
+    -maxdepth 1 \
+    -type d \
+    -not -path /workspaces \
+    -not -path '/workspaces/.*' \
+    -printf '- %f\n'
+)
+if test ${#workspaces[@]} -gt 0; then
+  echo "Mounted workspaces include:"
+  for ((i=0; i<${#workspaces[@]}; i++)); do
+    echo "${workspaces[${i}]}"
+  done
+fi
