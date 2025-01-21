@@ -1,4 +1,4 @@
-# syntax=docker.io/docker/dockerfile:1.4
+# syntax=docker.io/docker/dockerfile
 ARG IMAGE_NAME
 ARG IMAGE_TAG
 FROM ${IMAGE_NAME}:${IMAGE_TAG} AS base
@@ -34,6 +34,8 @@ packages=$(
         bash
         busybox-extras
         coreutils
+        findutils
+        git
         musl
         musl-locales
         musl-locales-lang
@@ -105,3 +107,6 @@ if test -s /tmp/dotfiles.tgz; then
     rm -rf "${tmp}"
 fi
 ##END-RUN
+ARG PWD_HASH="${PWD_HASH}"
+LABEL PWD_HASH="${PWD_HASH}"
+ENTRYPOINT ["/bin/bash"]

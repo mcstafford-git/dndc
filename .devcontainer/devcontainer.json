@@ -1,6 +1,7 @@
 {
   "build": {
     "args": {
+      "PWD_HASH": "${localEnv:PWD_HASH}",
       "DOTFILES": "https://github.com/mcstafford-git/dndc.git",
       "HISTORY_MOUNT": "/workspaces/.local/state/bash_history",
       "IMAGE_NAME": "docker.io/alpine",
@@ -10,11 +11,10 @@
     },
     "dockerfile": "./devcontainer.dockerfile"
   },
-  "features": {},
-  "image": "localhost/devcontainers/dndc",
   "mounts": [
-    "source=devcontainer-bash-history-volume--dndc,target=/workspaces/.local/state/bash_history"
+    "source=devcontainer-bash-history-volume--dndc,target=/workspaces/.local/state/bash_history",
+    "type=bind,source=${localEnv:HOME}/.gitignore,target=/workspaces/.gitignore"
   ],
-  "postCreateCommand": "",
   "remoteUser": "worker"
 }
+
