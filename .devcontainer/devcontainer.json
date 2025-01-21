@@ -15,6 +15,7 @@
     "source=devcontainer-bash-history-volume--dndc,target=/workspaces/.local/state/bash_history",
     "type=bind,source=${localEnv:HOME}/.gitignore,target=/workspaces/.gitignore"
   ],
+  "postCreateCommand": "git config --global --add safe.directory /workspaces/*",
   "remoteUser": "worker"
 }
 
