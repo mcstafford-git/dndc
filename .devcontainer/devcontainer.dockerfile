@@ -34,11 +34,13 @@ packages=$(
         bash
         busybox-extras
         coreutils
+        delta
         findutils
         git
         musl
         musl-locales
         musl-locales-lang
+        ripgrep
         util-linux
         vim
     ' |
