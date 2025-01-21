@@ -37,6 +37,7 @@ packages=$(
         delta
         findutils
         git
+        less
         musl
         musl-locales
         musl-locales-lang
