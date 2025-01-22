@@ -1,25 +1,34 @@
 # vim: ft=bash
 
-_pwd_hash() { sha256 <<< "${PWD}"; }
+export DNDC_HOME="${DNDC_HOME:-$(dirname "$(realpath "${BASH_SOURCE[0]}")")}"
 
 _container() {
-	docker ps --filter "ancestor=$(_image)" --format=json |
+    # TODO: ... there can be only one?
+	docker ps --filter "ancestor=$(_image_name)" --format=json |
 		jq -r '.Names'
 }
 
-_image() {
-	for image in $(docker images -q); do
-		if docker inspect "${image}" |
-			jq '.[0].Config.Labels.PWD_HASH' |
-			grep -qc "$(_pwd_hash)"; then
-			echo "${image}"
-			break
-		fi
-	done
+_workspace_id() {
+  _repo() {
+    local -- remote="$(git remote get-url --push origin)"
+    python -c 'from sys import argv; from re import match, VERBOSE; p = r"(?:(?:[^@]+@)?[^:/]+:(.+))|(?://(?:[^@]+@)?[^/]+/(.+))"; m = match(p, argv[1], flags=VERBOSE); r = next((g for g in m.groups() if g), "") if m else ""; print("_".join(r.removesuffix(".git").lower().split("/")[-2:]));' "${remote}"
+  }
+  local -- hash
+  hash="$(pwd | md5 | cut -c 1-6)"
+  echo "$(_repo)-${hash:0:6}"
+}
+
+_image_name() { 
+    local -- namespace='localhost/dndc/' basename
+    if test -n "${NO_DNDC_NAMESPACES:-}"; then
+        namespace=''
+    fi
+    basename="${PWD##*/}"
+    printf '%s%s\n' "${namespace}" "$(_workspace_id)"
 }
 
 _prune() {
-	if test -n "${RETAIN_DANGLING_IMAGES:-}"; then
+	if test -n "${NO_DNDC_PRUNE:-}"; then
 		docker image prune --force --filter dangling=true
 	fi
 }
@@ -30,8 +39,7 @@ attach() {
 
 build() {
 	down &>/dev/null
-	export PWD_HASH=$(_pwd_hash)
-	devcontainer build &&
+    devcontainer build --image-name "$(_image_name)" &&
 		_prune
 }
 
@@ -48,7 +56,7 @@ debug-build() {
 		${build_args} \
 		--file="./.devcontainer/$(jq -r .build.dockerfile < .devcontainer/devcontainer.json)" \
 		--load \
-		--tag='localhost/debug-build:latest' \
+        --tag="$(_image_name):debug" \
 		./.devcontainer
 	set +x
 	_prune
@@ -63,13 +71,12 @@ down() {
 }
 
 exec() {
-	docker exec $(_image) bash -c "${@}"
+	docker exec $(_container) bash -c "${@}"
 }
 
 alias up='devcontainer up'
 
 dndc() {
-	export export PWD_HASH="$(_pwd_hash)"
 	if test -z "$(_container)"; then
 		echo '# starting container' 1>&2
 		devcontainer up
@@ -77,3 +84,18 @@ dndc() {
 	echo '# attaching container' 1>&2
 	attach
 }
+
+init() {
+  # create .devcontainer as needed and install dndc templates
+  local -- workspace_id="$(_workspace_id)"
+  (
+    set -o errexit -o verbose
+    if ! test -d ./.devcontainer; then
+      mkdir ./.devcontainer
+    fi
+    cd ./.devcontainer
+    eval cp "${DNDC_HOME}/.devcontainer/devcontainer.*" .
+    perl -pi -e "s/--pleroo_dndc-000000/--${workspace_id}/g" ./devcontainer.json
+  )
+}
+

@@ -112,6 +112,4 @@ if test -s /tmp/dotfiles.tgz; then
     rm -rf "${tmp}"
 fi
 ##END-RUN
-ARG PWD_HASH="${PWD_HASH}"
-LABEL PWD_HASH="${PWD_HASH}"
 ENTRYPOINT ["/bin/bash"]

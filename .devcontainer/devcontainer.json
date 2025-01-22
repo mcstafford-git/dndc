@@ -6,7 +6,6 @@
       "IMAGE_NAME": "docker.io/alpine",
       "IMAGE_TAG": "latest",
       "OS_USER": "worker",
-      "PWD_HASH": "${localEnv:PWD_HASH}",
       "WORKDIR": "/workspaces"
     },
     "dockerfile": "./devcontainer.dockerfile"
@@ -14,7 +13,7 @@
   "mounts": [
     "type=bind,source=${localEnv:HOME}/.gitignore,target=/workspaces/.gitignore",
     "type=bind,source=${localEnv:HOME}/.gnupg,target=/workspaces/.gnupg",
-    "type=volume,source=devcontainer-bash-history-volume--dndc,target=/workspaces/.local/state/bash_history"
+    "type=volume,source=devcontainer-bash-history-volume--pleroo_dndc-000000,target=/workspaces/.local/state/bash_history"
   ],
   "postCreateCommand": "git config --global --add safe.directory /workspaces/*",
   "remoteUser": "worker"
