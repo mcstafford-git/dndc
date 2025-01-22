@@ -38,6 +38,7 @@ packages=$(
         findutils
         git
         grep
+        gnupg
         less
         musl
         musl-locales
